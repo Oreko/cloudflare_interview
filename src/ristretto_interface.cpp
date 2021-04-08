@@ -1,4 +1,5 @@
 #include "ristretto_interface.hpp"
+#include <stdexcept>
 #include <cstring>
 
 Ristretto25519 Ristretto25519::fromHash(const hashval_t& h)
@@ -40,7 +41,11 @@ Ristretto25519 Ristretto25519::operator-(const Ristretto25519& b) const
 Ristretto25519 operator*(const Field25519& a, const Ristretto25519& b)
 {
     Ristretto25519 result;
-    crypto_scalarmult_ristretto255(result.point, a.element, b.point);
+    int failure = crypto_scalarmult_ristretto255(result.point, a.element, b.point);
+    if(failure != 0)
+    {
+        throw std::runtime_error("scalarmult");
+    }
     return result;
 }
 
