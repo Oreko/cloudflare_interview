@@ -13,8 +13,15 @@ Ristretto25519 operator*(const Field25519&, const Ristretto25519&);
 struct Ristretto25519
 {
     ristpoint_t point;
+    static const size_t size = crypto_core_ristretto255_BYTES;
 
     Ristretto25519() : point{0} {};
+
+    Ristretto25519& operator=(Ristretto25519 other)
+    {
+        memcpy(point, other.point, size);
+        return *this;
+    }
 
     static Ristretto25519 fromHash(const hashval_t&);
     static Ristretto25519 fromScalar(const Field25519&);

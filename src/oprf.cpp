@@ -33,15 +33,15 @@ namespace OPRF
         Field25519 r = Field25519::randomScalar();
         Field25519 a = Field25519::randomScalar();
 
-        char domainSeparation[CONTEXT_MAX + 12]{0};
-        sprintf(domainSeparation, "VOPRF-Blind-%s",contextString);
+        char domainSeparation[CONTEXT_MAX + 12 + 5]{0};
+        sprintf(domainSeparation, "%04d-VOPRF-Blind-%s",contextLength + 12 + 5, contextString);
 
         hashval_t hashOutput;
         sha512helper(hashOutput, domainSeparation, strlen(domainSeparation), input, length);
         Ristretto25519 T = Ristretto25519::fromHash(hashOutput);
         Ristretto25519 A = Ristretto25519::fromScalar(a);
         Ristretto25519 R = (T - A) * r;
-        memcpy(blindedElement.point, R.point, crypto_core_ristretto255_BYTES);
+        blindedElement = R;
         blinding.blind1 = r;
         blinding.blind2 = a;
     }
@@ -63,10 +63,10 @@ namespace OPRF
         Ristretto25519 tempElem = Ristretto25519::fromPoint(evaluatedElement);
         Ristretto25519 unblindedElement = unblind(blinding, tempElem);
 
-        char domainSeparation[CONTEXT_MAX + 16 + 2*crypto_core_ristretto255_BYTES + 1]{'\0'};
+        char domainSeparation[CONTEXT_MAX + 16 + 2*Ristretto25519::size + 1]{'\0'};
         // quick and dirty, I need to write a more robust version of this.
-        char unblindedHex[2 * crypto_core_ristretto255_BYTES + 1];
-        sodium_bin2hex(unblindedHex, 2 * crypto_core_ristretto255_BYTES + 1, unblindedElement.point, crypto_core_ristretto255_BYTES);
+        char unblindedHex[2 * Ristretto25519::size + 1];
+        sodium_bin2hex(unblindedHex, 2 * Ristretto25519::size + 1, unblindedElement.point, Ristretto25519::size);
         sprintf(domainSeparation, "%s-VOPRF-Finalize-%s", unblindedHex, contextString);
 
         sha512helper(returnVal, domainSeparation, strlen(domainSeparation), input, length);
@@ -85,21 +85,24 @@ namespace OPRF
     {
         Ristretto25519 R = Ristretto25519::fromPoint(blindedElement);
         Ristretto25519 Z = R * skS;
-        memcpy(returnVal, Z.point, crypto_core_ristretto255_BYTES);
+        memcpy(returnVal, Z.point, Ristretto25519::size);
     }
 
     void WeakVOprfSender::full_evaluate(const PrivateKey& skS, const ClientInput& input, const size_t length, hashval_t& returnVal)
     {   
+        char blindDomainSeparation[CONTEXT_MAX + 12 + 5]{'\0'};
+        sprintf(blindDomainSeparation, "%04d-VOPRF-Blind-%s", contextLength + 12 + 5, contextString);
+
         hashval_t hashOutput;
-        sha512helper(hashOutput, "", 0, input, length);
+        sha512helper(hashOutput, blindDomainSeparation, strlen(blindDomainSeparation), input, length);
         Ristretto25519 P = Ristretto25519::fromHash(hashOutput);
 
         Ristretto25519 T = P * skS;
 
-        char domainSeparation[CONTEXT_MAX + 16 + crypto_core_ristretto255_BYTES]{'\0'};
+        char domainSeparation[CONTEXT_MAX + 16 + Ristretto25519::size]{'\0'};
         // quick and dirty, I need to write a more robust version of this.
-        char THex[2 * crypto_core_ristretto255_BYTES + 1];
-        sodium_bin2hex(THex, 2 * crypto_core_ristretto255_BYTES + 1, T.point, crypto_core_ristretto255_BYTES);
+        char THex[2 * Ristretto25519::size + 1];
+        sodium_bin2hex(THex, 2 * Ristretto25519::size + 1, T.point, Ristretto25519::size);
         sprintf(domainSeparation, "%s-VOPRF-Finalize-%s", THex, contextString);
 
         sha512helper(returnVal, domainSeparation, strlen(domainSeparation), input, length);
@@ -108,8 +111,8 @@ namespace OPRF
 
     bool WeakVOprfSender::verify_finalize(const PrivateKey& skS, const ClientInput& input, const size_t length, const hashval_t& output)
     {
-        char blindDomainSeparation[CONTEXT_MAX + 12]{'\0'};
-        sprintf(blindDomainSeparation, "VOPRF-Blind-%s",contextString);
+        char blindDomainSeparation[CONTEXT_MAX + 12 + 5]{'\0'};
+        sprintf(blindDomainSeparation, "%04d-VOPRF-Blind-%s", contextLength + 12 + 5, contextString);
 
         hashval_t hashOutput;
         sha512helper(hashOutput, blindDomainSeparation, strlen(blindDomainSeparation), input, length);
@@ -119,10 +122,10 @@ namespace OPRF
         evaluate(skS, P.point, issuedElement);
 
         hashval_t digest;
-        char finalizeDomainSeparation[CONTEXT_MAX + 16 + 2 * crypto_core_ristretto255_BYTES + 1]{'\0'};
+        char finalizeDomainSeparation[CONTEXT_MAX + 16 + 2 * Ristretto25519::size + 1]{'\0'};
         // quick and dirty, I need to write a more robust version of this.
-        char issuedHex[2 * crypto_core_ristretto255_BYTES + 1];
-        sodium_bin2hex(issuedHex, 2 * crypto_core_ristretto255_BYTES + 1, issuedElement, crypto_core_ristretto255_BYTES);
+        char issuedHex[2 * Ristretto25519::size + 1];
+        sodium_bin2hex(issuedHex, 2 * Ristretto25519::size + 1, issuedElement, Ristretto25519::size);
         sprintf(finalizeDomainSeparation, "%s-VOPRF-Finalize-%s", issuedHex, contextString);
 
         sha512helper(digest, finalizeDomainSeparation, strlen(finalizeDomainSeparation), input, length);

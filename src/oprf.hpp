@@ -3,7 +3,7 @@
 #include <sodium.h>
 #include "ristretto_interface.hpp"
 
-#define CONTEXT_MAX 2000 // Magic number, it's just a rough upper end. The standard requires we have a string of at least 512 bytes 
+#define CONTEXT_MAX 2000 // Magic number, it's just a rough upper end. The standard requires we have a string of at least 512 bits 
 
 namespace OPRF
 {
