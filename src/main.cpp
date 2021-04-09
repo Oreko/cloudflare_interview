@@ -28,12 +28,23 @@ int main(void)
 
     if(testPass)
     {
-        printf("passed\n");
+        printf("passed client-server view\n");
     } else
     {
-        printf("failed\n");
+        printf("failed client-server view\n");
     }
-    
+
+    sender.full_evaluate(privateKey, inputString, inputLength, result);
+
+    testPass = sender.verify_finalize(privateKey, inputString, inputLength, result);
+
+    if(testPass)
+    {
+        printf("passed server-server view\n");
+    } else
+    {
+        printf("failed server-server view\n");
+    }
 
     // Test vectors for if this is altered to be perfectly aligned with the standard.
 
