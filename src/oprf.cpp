@@ -20,7 +20,7 @@ namespace OPRF
 
         crypto_hash_sha512_init(&state);
         
-        // This c style casting is a reinterpret cast under the hood which technically is undefined here, but this is what we see libsodium doing...
+        // This c style casting is a reinterpret cast under the hood which technically is undefined behavior here, but this is what we see libsodium doing...
         // At some point it would be best to just decompose everything into raw bytes upstream instead. 
         crypto_hash_sha512_update(&state, (const unsigned char *) context, contextlength);
         crypto_hash_sha512_update(&state, src, srclength);

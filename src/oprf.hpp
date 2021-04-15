@@ -23,6 +23,8 @@ namespace OPRF
     {
         public:
             WeakVOprfReceiver(void) = delete;
+            // The first three arguments here are used for domain separation. The standard has a different way of providing this separation.
+            // Also, as they provide domain separation, the arguments should be distinct across runs in some fashion. 
             WeakVOprfReceiver(const unsigned int sid, const unsigned int ssid, const unsigned int uid, Ristretto25519 publicKey);
             WeakVOprfReceiver(const WeakVOprfReceiver&) = delete;
             // Copy and move assigns purposely left out. Please don't copy an OPRF.
@@ -42,6 +44,8 @@ namespace OPRF
     {
         public:
             WeakVOprfSender(void) = delete;
+            // The first three arguments here are used for domain separation. The standard has a different way of providing this separation.
+            // Also, as they provide domain separation, the arguments should be distinct across runs in some fashion. 
             WeakVOprfSender(const unsigned int sid, const unsigned int ssid, const unsigned int uid);
             WeakVOprfSender(const WeakVOprfSender&) = delete;
             // Copy and move assigns purposely left out. Please don't copy an OPRF.
